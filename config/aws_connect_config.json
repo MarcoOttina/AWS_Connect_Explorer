@@ -1,0 +1,8 @@
+{
+    "credentials": [
+        {
+            "name": "default",
+            "region" : "eu-central-1"
+        }
+    ]
+}
