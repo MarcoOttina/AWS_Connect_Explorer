@@ -1,12 +1,12 @@
 import uuid
 
-from ..shared_types.enums import BlockType, OutBranchType
+from ..shared_types.enums import NodeType, OutBranchType
 from ..shared_types.connect_types import DataManipulated
 
 
-class GraphBlock:
+class GraphNode:
     ID: uuid
-    type: BlockType
+    type: NodeType
     isBranchingPoint: bool
     outConnections: OutBranchType
     totalDataManipulated: DataManipulated

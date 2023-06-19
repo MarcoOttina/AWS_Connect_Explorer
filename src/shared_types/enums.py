@@ -9,7 +9,7 @@ class OutBranchType(Enum):
     Prompt = 4
     
     
-class BlockType(Enum):
+class NodeType(Enum):
     PlayPrompt = 1
     Check = 2
     SetCustomAttributes = 3
@@ -17,20 +17,20 @@ class BlockType(Enum):
     LambdaCall = 5
     # TODO : add other types
 
-def block_type_from_str(block_type):
-    if not block_type:
+def Node_type_from_str(Node_type):
+    if not Node_type:
         return None
     
-    if block_type == "PlayPrompt":
-        return BlockType.PlayPrompt
-    elif block_type == "Check":
-        return BlockType.Check
-    elif block_type == "SetCustomAttributes":
-        return BlockType.SetCustomAttributes
-    elif block_type == "Termination":
-        return BlockType.Termination
-    elif block_type == "LambdaCall":
-        return BlockType.LambdaCall
+    if Node_type == "PlayPrompt":
+        return NodeType.PlayPrompt
+    elif Node_type == "Check":
+        return NodeType.Check
+    elif Node_type == "SetCustomAttributes":
+        return NodeType.SetCustomAttributes
+    elif Node_type == "Termination":
+        return NodeType.Termination
+    elif Node_type == "LambdaCall":
+        return NodeType.LambdaCall
     
     return None
 

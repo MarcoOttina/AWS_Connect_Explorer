@@ -8,7 +8,7 @@ class DataManipulated:
     set: list[DataResource]
 
 
-class BlockLink:
+class NodeLink:
     to: uuid
     type: OutBranchType
     isStandard: bool
@@ -16,7 +16,7 @@ class BlockLink:
     
     
 class OutConnectionsPartition:
-    standards: list[BlockLink]
-    errors: list[BlockLink]
+    standards: list[NodeLink]
+    errors: list[NodeLink]
 
 
