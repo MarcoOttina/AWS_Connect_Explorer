@@ -1,0 +1,105 @@
+{
+    "Version": "2019-10-30",
+    "StartAction": "7db3f99b-d3a3-44e5-a5bf-3174b351eb3c",
+    "Metadata": {
+        "entryPointPosition": {
+            "x": 15,
+            "y": 15
+        },
+        "snapToGrid": false,
+        "ActionMetadata": {
+            "7db3f99b-d3a3-44e5-a5bf-3174b351eb3c": {
+                "position": {
+                    "x": 218,
+                    "y": 85
+                },
+                "overrideConsoleVoice": false,
+                "defaultVoice": "Standard"
+            },
+            "918e0013-3e4f-404e-9373-e5def0ffc5c2": {
+                "position": {
+                    "x": 520,
+                    "y": 88
+                },
+                "useDynamic": false
+            },
+            "51687544-26f3-417f-bab3-4c7bae450778": {
+                "position": {
+                    "x": 1297,
+                    "y": 164
+                }
+            },
+            "ea0f9100-a693-458f-98ed-53b5f44640c8": {
+                "position": {
+                    "x": 740,
+                    "y": 139
+                },
+                "overrideConsoleVoice": false,
+                "defaultVoice": "Standard"
+            },
+            "17c17d57-1623-40ff-bb1d-621855f88601": {
+                "position": {
+                    "x": 988,
+                    "y": 233
+                },
+                "useDynamic": false
+            }
+        }
+    },
+    "Actions": [
+        {
+            "Identifier": "7db3f99b-d3a3-44e5-a5bf-3174b351eb3c",
+            "Parameters": {
+                "TextToSpeechVoice": "Celine"
+            },
+            "Transitions": {
+                "NextAction": "918e0013-3e4f-404e-9373-e5def0ffc5c2",
+                "Errors": [],
+                "Conditions": []
+            },
+            "Type": "UpdateContactTextToSpeechVoice"
+        },
+        {
+            "Identifier": "918e0013-3e4f-404e-9373-e5def0ffc5c2",
+            "Parameters": {
+                "SSML": "<speak>\n<break time=\"1s\"/>\nBonjour,\nVous avez été contacté au sujet de votre leasing ou de votre demande. Veuillez contacter votre concessionnaire pour plus d’informations.\nMeilleures salutations.\n</speak>"
+            },
+            "Transitions": {
+                "NextAction": "ea0f9100-a693-458f-98ed-53b5f44640c8",
+                "Errors": [],
+                "Conditions": []
+            },
+            "Type": "MessageParticipant"
+        },
+        {
+            "Identifier": "51687544-26f3-417f-bab3-4c7bae450778",
+            "Type": "DisconnectParticipant",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "ea0f9100-a693-458f-98ed-53b5f44640c8",
+            "Parameters": {
+                "TextToSpeechVoice": "Lotte"
+            },
+            "Transitions": {
+                "NextAction": "17c17d57-1623-40ff-bb1d-621855f88601",
+                "Errors": [],
+                "Conditions": []
+            },
+            "Type": "UpdateContactTextToSpeechVoice"
+        },
+        {
+            "Identifier": "17c17d57-1623-40ff-bb1d-621855f88601",
+            "Parameters": {
+                "SSML": "<speak>\n<break time=\"1s\"/>\nGoedemorgen,\ncontact is opgenomen over uw huurovereenkomst of uw vraag. Voor meer informatie hierover kunt u contact opnemen met uw dealer.\nDuizendmaal dank.\n</speak>"
+            },
+            "Transitions": {
+                "NextAction": "51687544-26f3-417f-bab3-4c7bae450778",
+                "Errors": [],
+                "Conditions": []
+            },
+            "Type": "MessageParticipant"
+        }
+    ]
+}

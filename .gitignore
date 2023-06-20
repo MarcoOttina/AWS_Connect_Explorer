@@ -121,6 +121,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env*
 .venv
 env/
 venv/
@@ -161,6 +162,11 @@ cython_debug/
 
 
 
-# daw.io
+# draw.io
 *.bkp
 *.dtmp
+
+
+# output
+**/out
+**/output

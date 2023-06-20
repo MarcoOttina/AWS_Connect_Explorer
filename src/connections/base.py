@@ -1,9 +1,10 @@
 import boto3
-from config import config as cfg
+#from config import config as cfg
+import config as cfg
 
 
 class NewClientConfig:
-    region: str = cfg.DEFAULT_REGION
+    region: (str|None) = None
     __aws_access_key_id: (str | None) = None
     __aws_secret_access_key: (str | None) = None
     __aws_session_token: (str | None) = None
@@ -12,8 +13,9 @@ class NewClientConfig:
     def __init__(self, region: (str | None) = None, aws_access_key_id: (str | None) = None,
         aws_secret_access_key: (str | None) = None,
         aws_session_token: (str | None) = None):
-        if region is not None:
-            self.region = region
+        
+        self.region = region if region is not None else cfg.config.DEFAULT_REGION
+            
         self.__aws_access_key_id = aws_access_key_id
         self.__aws_secret_access_key = aws_secret_access_key
         self.__aws_session_token = aws_session_token
@@ -38,7 +40,10 @@ def new_client( service: (str | None) = 'connect', client_config: (NewClientConf
         aws_secret_access_key = client_config.__aws_secret_access_key,
         aws_session_token = client_config.__aws_session_token
     )
-    return session.resource(service)
+    return session.client(
+        service_name=service,
+        region_name=client_config.region
+    )
 
 
 def instance_id_from_ARN(arn: str) -> str:

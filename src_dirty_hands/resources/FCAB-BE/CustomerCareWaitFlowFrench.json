@@ -1,0 +1,243 @@
+{
+    "Version": "2019-10-30",
+    "StartAction": "a6be2c86-0ce7-4ea3-bcba-31abb1235719",
+    "Metadata": {
+        "entryPointPosition": {
+            "x": 15,
+            "y": 15
+        },
+        "snapToGrid": false,
+        "ActionMetadata": {
+            "d0b728d9-033c-4490-9f35-5c05e482f78f": {
+                "position": {
+                    "x": 648,
+                    "y": 273
+                }
+            },
+            "a6be2c86-0ce7-4ea3-bcba-31abb1235719": {
+                "position": {
+                    "x": 250,
+                    "y": 143
+                },
+                "audio": [
+                    {
+                        "id": "arn:aws:connect:eu-central-1:139292739238:instance/64e60a25-d25b-45b6-86ef-7c7712b88353/prompt/03b72c41-667a-4053-8924-89cf43585d14",
+                        "text": "Music_Jazz_MyTimetoFly_Inst.wav",
+                        "type": "Prompt"
+                    }
+                ],
+                "timeoutUnit": {
+                    "display": "Seconds",
+                    "value": "sec"
+                }
+            },
+            "90ffc8dd-6ff4-4641-88b3-c32436e708e0": {
+                "position": {
+                    "x": 1656,
+                    "y": 78
+                }
+            },
+            "773770a7-a596-4b09-9dad-e5576665aec9": {
+                "position": {
+                    "x": 639,
+                    "y": 33
+                },
+                "conditionMetadata": [
+                    {
+                        "attribute": {
+                            "name": "Time in Queue",
+                            "value": "Time in Queue",
+                            "internalValue": "CheckQueueTime"
+                        },
+                        "time": "sec.",
+                        "value": "300",
+                        "operator": {
+                            "name": "Is greater than",
+                            "value": "GreaterThan",
+                            "shortDisplay": ">"
+                        },
+                        "id": "84c562ce-b523-4256-8215-8c787c43a5e4"
+                    }
+                ],
+                "useDynamic": false
+            },
+            "d4a91ae0-ba65-4ddb-b4bc-e7271b05ced3": {
+                "position": {
+                    "x": 1056,
+                    "y": 48
+                },
+                "useDynamic": false,
+                "promptName": "13. Timeout message FR.wav"
+            },
+            "13750e13-aecd-49d2-9870-e0ecd3551521": {
+                "position": {
+                    "x": 2409,
+                    "y": 296
+                }
+            },
+            "83ff3ca8-81ea-4c0d-8204-43f929225428": {
+                "position": {
+                    "x": 1059,
+                    "y": 279
+                },
+                "useDynamic": false
+            },
+            "94008a41-57fb-475a-ab05-11813586c41b": {
+                "position": {
+                    "x": 1575,
+                    "y": 531
+                },
+                "useDynamic": false,
+                "promptName": "11. Waiting Message FR.wav"
+            }
+        }
+    },
+    "Actions": [
+        {
+            "Identifier": "d0b728d9-033c-4490-9f35-5c05e482f78f",
+            "Type": "DisconnectParticipant",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "a6be2c86-0ce7-4ea3-bcba-31abb1235719",
+            "Parameters": {
+                "InterruptFrequencySeconds": "30",
+                "Messages": [
+                    {
+                        "PromptId": "arn:aws:connect:eu-central-1:139292739238:instance/64e60a25-d25b-45b6-86ef-7c7712b88353/prompt/03b72c41-667a-4053-8924-89cf43585d14"
+                    }
+                ]
+            },
+            "Transitions": {
+                "NextAction": "d0b728d9-033c-4490-9f35-5c05e482f78f",
+                "Errors": [
+                    {
+                        "NextAction": "d0b728d9-033c-4490-9f35-5c05e482f78f",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "NextAction": "773770a7-a596-4b09-9dad-e5576665aec9",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "MessagesInterrupted"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "MessageParticipantIteratively"
+        },
+        {
+            "Identifier": "90ffc8dd-6ff4-4641-88b3-c32436e708e0",
+            "Type": "DisconnectParticipant",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "773770a7-a596-4b09-9dad-e5576665aec9",
+            "Parameters": {
+                "MetricType": "OldestContactInQueueAgeSeconds"
+            },
+            "Transitions": {
+                "NextAction": "90ffc8dd-6ff4-4641-88b3-c32436e708e0",
+                "Errors": [
+                    {
+                        "NextAction": "83ff3ca8-81ea-4c0d-8204-43f929225428",
+                        "ErrorType": "NoMatchingCondition"
+                    },
+                    {
+                        "NextAction": "90ffc8dd-6ff4-4641-88b3-c32436e708e0",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "NextAction": "d4a91ae0-ba65-4ddb-b4bc-e7271b05ced3",
+                        "Condition": {
+                            "Operator": "NumberGreaterThan",
+                            "Operands": [
+                                "300000"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "CheckMetricData"
+        },
+        {
+            "Identifier": "d4a91ae0-ba65-4ddb-b4bc-e7271b05ced3",
+            "Parameters": {
+                "PromptId": "arn:aws:connect:eu-central-1:139292739238:instance/64e60a25-d25b-45b6-86ef-7c7712b88353/prompt/9b958cfe-02a2-43d4-b0f2-c9604337fa9b"
+            },
+            "Transitions": {
+                "NextAction": "90ffc8dd-6ff4-4641-88b3-c32436e708e0",
+                "Errors": [
+                    {
+                        "NextAction": "90ffc8dd-6ff4-4641-88b3-c32436e708e0",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": []
+            },
+            "Type": "MessageParticipant"
+        },
+        {
+            "Identifier": "13750e13-aecd-49d2-9870-e0ecd3551521",
+            "Parameters": {},
+            "Transitions": {},
+            "Type": "EndFlowExecution"
+        },
+        {
+            "Identifier": "83ff3ca8-81ea-4c0d-8204-43f929225428",
+            "Parameters": {
+                "MetricType": "NumberOfAgentsAvailable"
+            },
+            "Transitions": {
+                "NextAction": "13750e13-aecd-49d2-9870-e0ecd3551521",
+                "Errors": [
+                    {
+                        "NextAction": "13750e13-aecd-49d2-9870-e0ecd3551521",
+                        "ErrorType": "NoMatchingError"
+                    },
+                    {
+                        "NextAction": "94008a41-57fb-475a-ab05-11813586c41b",
+                        "ErrorType": "NoMatchingCondition"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "NextAction": "13750e13-aecd-49d2-9870-e0ecd3551521",
+                        "Condition": {
+                            "Operator": "NumberGreaterThan",
+                            "Operands": [
+                                "0"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "CheckMetricData"
+        },
+        {
+            "Identifier": "94008a41-57fb-475a-ab05-11813586c41b",
+            "Parameters": {
+                "PromptId": "arn:aws:connect:eu-central-1:139292739238:instance/64e60a25-d25b-45b6-86ef-7c7712b88353/prompt/9433756c-f434-489c-b095-b23ed56b5cb0"
+            },
+            "Transitions": {
+                "NextAction": "13750e13-aecd-49d2-9870-e0ecd3551521",
+                "Errors": [
+                    {
+                        "NextAction": "13750e13-aecd-49d2-9870-e0ecd3551521",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": []
+            },
+            "Type": "MessageParticipant"
+        }
+    ]
+}
