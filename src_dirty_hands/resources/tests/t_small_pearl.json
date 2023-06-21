@@ -1,0 +1,49 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy1"
+            }
+        },
+        {
+            "Identifier": "dummy1",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy2",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy2",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy3",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy3",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        }
+    ]
+}

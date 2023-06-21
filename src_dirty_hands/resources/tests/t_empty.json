@@ -1,0 +1,19 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END"
+            }
+        }
+    ]
+}

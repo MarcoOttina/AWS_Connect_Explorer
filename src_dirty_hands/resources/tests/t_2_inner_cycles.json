@@ -1,0 +1,146 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c1"
+            }
+        },
+        {
+            "Identifier": "c1",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [
+                    {
+                        "NextAction": "END",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [ {
+                    "NextAction": "dummy1",
+                    "Condition": {
+                        "Operator": "Equals",
+                        "Operands": [
+                            "MessagesInterrupted"
+                        ]
+                    }
+                }]
+            }
+        },
+        {
+            "Identifier": "dummy1",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy2",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy2",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy3",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "c2",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [
+                    {
+                        "NextAction": "END",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "NextAction": "dummy3",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "A"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy4",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "B"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Identifier": "dummy3",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy2",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy4",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy5",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy5",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy6",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy6",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy7",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy8",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy2",
+                "Errors": [],
+                "Conditions": []
+            }
+        }
+    ]
+}

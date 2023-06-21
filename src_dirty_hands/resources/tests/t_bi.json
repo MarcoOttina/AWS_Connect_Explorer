@@ -1,0 +1,39 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy1"
+            }
+        },
+        {
+            "Identifier": "dummy1",
+            "Type": "Dymmy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy1",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy2",
+            "Type": "Dymmy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        }
+    ]
+}

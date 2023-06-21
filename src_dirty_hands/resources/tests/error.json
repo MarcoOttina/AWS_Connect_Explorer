@@ -1,0 +1,34 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "e1"
+            }
+        },
+        {
+            "Identifier": "e1",
+            "Type": "Error",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [
+                    {
+                        "NextAction": "END",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": []
+            }
+        }
+    ]
+}

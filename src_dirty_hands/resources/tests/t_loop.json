@@ -1,0 +1,62 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c1"
+            }
+        },
+        {
+            "Identifier": "c1",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [
+                    {
+                        "NextAction": "END",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [ {
+                    "NextAction": "dummy1",
+                    "Condition": {
+                        "Operator": "Equals",
+                        "Operands": [
+                            "MessagesInterrupted"
+                        ]
+                    }
+                }]
+            }
+        },
+        {
+            "Identifier": "dummy1",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "l1",
+            "Type": "Loop",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c1",
+                "Errors": [],
+                "Conditions": []
+            }
+        }
+    ]
+}

@@ -11,13 +11,18 @@ INSTANCE_DETAILS = {
     "arn": "arn:aws:connect:eu-central-1:139292739238:instance/93903ac6-b964-42d6-8383-3d90ab6799bd"
 }
 
+#
+class Jsonable:
+    def to_json(self):
+        return self
+    
 
 def instance_id_from_ARN(arn: str) -> str:
     return arn[1 + arn.rindex('/') :]
 
 
-def outputJsonFile(json_obj, instanceIdFlow, what_is_it, pre_processing = None):
-    folder_file = f'./output/{INSTANCE_DETAILS["market"]}/{INSTANCE_DETAILS["language"]}'
+def outputJsonFile_OLD(json_obj, instanceIdFlow, what_is_it, pre_processing = None, market_lang_data = INSTANCE_DETAILS):
+    folder_file = f'./output/{market_lang_data["market"]}/{market_lang_data["language"]}'
     os.makedirs(folder_file, exist_ok=True)
     
     filename = f'{folder_file}/{instanceIdFlow}__{what_is_it}.json'
@@ -25,8 +30,32 @@ def outputJsonFile(json_obj, instanceIdFlow, what_is_it, pre_processing = None):
         print("writing", what_is_it)
         if pre_processing is not None:
             json_obj = pre_processing(json_obj)
-        f.write(json.dumps(json_obj))
+        s = ""
+        if isinstance(json_obj, Jsonable):
+            s = json_obj.to_json()
+        else:
+             s = json.dumps(json_obj)
+        f.write(s)
         print(what_is_it,"written")
+    return json_obj
+
+
+def outputJsonFile(json_obj, name, subfolder, pre_processing = None ):
+    folder_file = f'./output/{subfolder}'
+    os.makedirs(folder_file, exist_ok=True)
+    
+    filename = f'{folder_file}/{name}.json'
+    with open(filename, 'w') as f:
+        print("writing", name)
+        if pre_processing is not None:
+            json_obj = pre_processing(json_obj)
+        s = ""
+        if isinstance(json_obj, Jsonable):
+            s = json_obj.to_json()
+        else:
+             s = json.dumps(json_obj)
+        f.write(s)
+        print(name,"written")
     return json_obj
 
 
@@ -35,9 +64,6 @@ def outputJsonFile(json_obj, instanceIdFlow, what_is_it, pre_processing = None):
 # CLASSES
 #
 
-class Jsonable:
-    def to_json(self):
-        return self
 
 # just added as documentation, since it's NOT serializable automatically; call "to_json()" for that purpose
 class GraphVDNNode(Jsonable):
@@ -330,35 +356,48 @@ def start_connection():
 # READ FILE DATA ; BUILD A GRAPH
 #
 
-def read_all_flows():
-    all_flows_name = [
-        'CustomerCareWorkFlow',
-        'CustomerCareWaitFlowDutch'
+# structure: {"name":str, "res_folder":str, "output_folder":str}
+def get_all_flows_list() -> list[dict[str,str]]:
+    tests = [
+        't_empty',
+        't_mono',
+        't_bi',
+        't_small_pearl',
+        'error',
+        't_check',
+        't_loop',
+        't_loop_broken',
+        't_small_cycle',
+        't_chain_of_cycles',
+        't_2_inner_cycles'
     ]
-    filename_flow_current = all_flows_name[1]
-    print("analysing flow: ", filename_flow_current)
-    flow_details = {}
-    with open(f'./resources/FCAB-BE/{filename_flow_current}.json', 'r') as f:
-        flow_details = json.load(f)
+    tests = [ {"name": t, 'res_folder': "tests", "output_folder": "graph"} for t in tests]
     
-    return {
-        'startBlockID': flow_details['StartAction'],
-        'blocks': flow_details['Actions']
-    }
+    #fcab_be = [ {"name": x, 'res_folder': "FCAB-BE" , "output_folder": "FCAB-BE"}  for x in ['CustomerCareWorkFlow','CustomerCareWaitFlowDutch']]
+    fcab_be = []
+    
+    return tests + fcab_be
+
+
+def readers_of_flows() -> map:
+    all_flows_name = get_all_flows_list()
+    def loader_flow(filename_flow_current):
+        print("analysing flow: ", filename_flow_current)
+        flow_details = {}
+        with open(f'./resources/{filename_flow_current["res_folder"]}/{filename_flow_current["name"]}.json', 'r') as f:
+            flow_details = json.load(f)
+    
+        return {
+            'name': filename_flow_current["name"],
+            'output_folder':filename_flow_current['output_folder'],
+            'startBlockID': flow_details['StartAction'],
+            'blocks': flow_details['Actions']
+        }
+    return map(loader_flow, all_flows_name)
+    
     
 def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
-    #i = 0
     blocks_original_data = flow_details['blocks']
-    #blocks_amount = len(blocks_original_data)
-    
-    '''
-    # use a map ID->node_data to make everything easier
-    blocks_original_data_by_id = {}
-    for bod in blocks_original_data:
-        blocks_original_data_by_id[bod['Identifier']] = bod
-        
-        #current_node = blocks_original_data_by_id[flow_details['startBlockID']] # WHY?
-    '''
     
     # nodes creation
     
@@ -417,16 +456,20 @@ if __name__ == "__main__":
     __instance_id__flow = instance_id_from_ARN(INSTANCE_DETAILS['arn'])
     print("instance ID:", __instance_id__flow)
 
-    flow = read_all_flows()
+    readers = readers_of_flows()
     
-    graph = GraphVDN(flow['startBlockID'])
-    
-    load_flow_blocks_into_graph(graph, flow)
-    print("now, to json")
-    print(graph.to_json())
-    
-    paths = graph.get_all_ends()
-    print("\n\n all", len(paths), "paths")
-    for p in paths:
-        print("- ", p.to_json())
+    for flow in readers:
+        print("\n\nreading", flow["name"], "flow")
+        graph = GraphVDN(flow['startBlockID'])
+        
+        load_flow_blocks_into_graph(graph, flow)
+        print("now, to json")
+        outputJsonFile(graph.to_json(), flow["name"], flow['output_folder'])
+        
+        paths = graph.get_all_ends()
+        print("\n\n all", len(paths), "paths")
+        i = 0
+        for p in paths:
+            outputJsonFile(p.to_json(), f'path_{i}', f'paths/{flow["name"]}')
+            i += 1
 
