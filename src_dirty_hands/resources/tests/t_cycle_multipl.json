@@ -1,0 +1,264 @@
+{
+    "StartAction": "START",
+    "Actions":[
+        {
+            "Identifier": "END",
+            "Type": "END",
+            "Parameters": {},
+            "Transitions": {}
+        },
+        {
+            "Identifier": "START",
+            "Type": "START",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c1"
+            }
+        },
+        {
+            "Identifier": "c1",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "Errors": [
+                    {
+                        "NextAction": "END",
+                        "ErrorType": "NoMatchingError"
+                    }
+                ],
+                "Conditions": [ {
+                    "NextAction": "dummy1",
+                    "Condition": {
+                        "Operator": "Equals",
+                        "Operands": [
+                            "MessagesInterrupted"
+                        ]
+                    }
+                }]
+            }
+        },
+        {
+            "Identifier": "dummy1",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy2",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy2",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy3",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy3",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy4",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy4",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c2",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "c2",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "Errors": [],
+                "Conditions": [
+                    {
+                        "NextAction": "dummy2",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "A"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy5",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "B"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Identifier": "dummy5",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy6",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy6",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c3",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "c3",
+            "Type": "Check",
+            "Parameters": {},
+            "Transitions": {
+                "Errors": [],
+                "Conditions": [
+                    {
+                        "NextAction": "dummy7",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "C"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy8",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "D"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy9",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "E"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy10",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "F"
+                            ]
+                        }
+                    },
+                    {
+                        "NextAction": "dummy12",
+                        "Condition": {
+                            "Operator": "Equals",
+                            "Operands": [
+                                "G"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "Identifier": "dummy7",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy8",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy9",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy7",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy10",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "l1",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "l1",
+            "Type": "Loop",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "c3",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy11",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy11",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy12",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "dummy13",
+                "Errors": [],
+                "Conditions": []
+            }
+        },
+        {
+            "Identifier": "dummy13",
+            "Type": "Dummy",
+            "Parameters": {},
+            "Transitions": {
+                "NextAction": "END",
+                "Errors": [],
+                "Conditions": []
+            }
+        }
+    ]
+}

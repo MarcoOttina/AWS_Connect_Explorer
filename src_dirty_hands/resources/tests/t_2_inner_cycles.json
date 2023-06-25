@@ -133,7 +133,7 @@
             }
         },
         {
-            "Identifier": "dummy8",
+            "Identifier": "dummy7",
             "Type": "Dummy",
             "Parameters": {},
             "Transitions": {
