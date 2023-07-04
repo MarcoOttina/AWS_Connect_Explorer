@@ -225,7 +225,7 @@ def extract_params_from_file(filename, folder_files):
 
 def extract_params_all_files():
     folder_files = "./resources/FCAB-BE"
-    jsons = list_all_files(folder_files, allowed_extension='.json', import_os_required=True)
+    jsons = list_all_files(folder_files, allowed_extension='json', import_os_required=True)
 
     parameters_by_file:dict[str,list[dict]] = {} # for each filename, stock the list of each blick (which hold its relative parameters, somewhere)
     for file in jsons:
@@ -291,6 +291,15 @@ def extract_graph_structure_data(flows_dict):
 #
 
 def merge_flow_graphs(flows_data):
+    '''
+    NOTA 1:
+    per effettare il merge, bisogna:
+    -) raggruppare tutte le direzioni per destinazione (così che se ci fossero
+        2+ RedirectToXYZ allora la stessa sostituzione dovrà essere fatta per tutti)
+    -) cercare tutti i link in uscita (di altri nodi) che puntano a ciascuna di queste
+        redirezioni in questi gruppi (insomma, si forma una fetta di ipergrafo in cui i vertici
+        di ogni arco sono insieme di "nodi con link uscenti)
+    '''
     pass
 
 #

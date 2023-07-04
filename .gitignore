@@ -165,6 +165,7 @@ cython_debug/
 # draw.io
 *.bkp
 *.dtmp
+.$*
 
 
 # output
@@ -174,3 +175,9 @@ cython_debug/
 #resources
 #**/resources
 #**/resources/
+
+*.zip
+*.cz
+*.rar
+*.7z
+*.tar

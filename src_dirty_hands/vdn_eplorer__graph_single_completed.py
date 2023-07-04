@@ -1,7 +1,9 @@
 import json
 import boto3
 import os
-from typing import Callable, Self
+
+#import block_names
+from vdn_graph_types import *
 
 __env = {"region": "eu-central-1", "aws_access_key_id": "ASIASA3T6Q2TEW5NQ27W", "aws_secret_access_key": "l7k+h5mG73oASI/VQSP8eqvzy1UxTzASs17ARL2o", "aws_session_token": "IQoJb3JpZ2luX2VjEE4aCXVzLWVhc3QtMSJHMEUCIF3aWZhHc29jwUOoGRyjActjViAcZ/PsxXfWLp2NulfxAiEAzmQfhEgvfQaYzqRMNLSzYxfqVwWb3PsYQ4CfBmI1QBIqvQMIp///////////ARACGgwxMzkyOTI3MzkyMzgiDFJdQz3hYh0mb8Iv9SqRA4zCkRLmn+rffAJjZP9Sqb/drg3WJZrIDLHdWf1ZRihargNf7WqX7onlWsNPBbkQbQu07eEem0ClzpTqymS6B06AoID255Xk7RnOVEFWpOmitvZ9iuJqy5rVG3Kpdixst96v524/KSnJn//yW80z0sqxV9kUL8sLwahUzz8y7rHJOpzX4LxRvydIwMUT8ajGjMYo889okgat/cqHY4dWp3AHrR7sZLyd0zolppmFNKwvfTGAcfMT9qWo670/SPvRAEDp+cpJgBzkRqVtyDPPudQGILFLqIulT3XS8hgEieLyflsGJVksr8xXNCB7PD0umwbep21zIPCwGUBWNuBAxXNtT11IQWVtJXIppjR7T21Ri6NlLXEg5sVQpALg5GLcF8hbrflcCoqD/iWP/6YCkSe/M+4rqBtjOv4muD/34tpXCHGIt1PRPGJdV6UXTXZW4VEpdtK8keNvSNf8d5t4i2vYM+pRveP44I0/xfUMY1Tm5Cs/COV0G0AhSoCX7itcGvaWHDYYXKvlVLJL6fdrgYMiMPndxqQGOqYBw9ixBeH6/jHN0/ogRjGXpo7RcEyGN/Ilvf1o/mczSw5NGEKQ00vm44vrbsIQxwYvKgZoO2b7VnF7EQ8S7JJvFEGmB8NfMjho00/TbcifmBEzmeod3R2nEDxM/UOQ6qkF13bs1Ml2z4e5b+7MPS+aFACaNlW8e8eYuWiwYH3k+mywxShf3uUN+WQRgtxRbkCbhSWQ71PIsij64FDrV7dK4X50KXip/w"}
 
@@ -11,11 +13,7 @@ INSTANCE_DETAILS = {
     "arn": "arn:aws:connect:eu-central-1:139292739238:instance/93903ac6-b964-42d6-8383-3d90ab6799bd"
 }
 
-#
-class Jsonable:
-    def to_json(self):
-        return self
-    
+
 
 def instance_id_from_ARN(arn: str) -> str:
     return arn[1 + arn.rindex('/') :]
@@ -58,293 +56,7 @@ def outputJsonFile(json_obj, name, subfolder, pre_processing = None ):
         print(name,"written")
     return json_obj
 
-
-
-#
-# CLASSES
-#
-
-
-# just added as documentation, since it's NOT serializable automatically; call "to_json()" for that purpose
-class GraphVDNNode(Jsonable):
-    __is_end:bool
-    id:str # it is a UUID
-    block_type: str
-    original_data: dict
-    links_out_ids_correct: list[str]
-    links_out_ids_error: list[str]
-    
-    def __init__(self, id:str, is_end: bool = True):
-        self.id = id
-        self.__is_end = is_end
-        self.block_type = "UNKNOWN"
-        self.original_data = {}
-        self.links_out_ids_correct = []
-        self.links_out_ids_error = []
         
-    def to_json(self):
-        return {
-            "id": self.id,
-            "is_end": self.__is_end,
-            "block_type": self.block_type,
-            "links_out_ids_correct": self.links_out_ids_correct,
-            "links_out_ids_error": self.links_out_ids_error,
-            "original_data": self.original_data
-        }
-    def short_description(self):
-        return {
-            "type": self.block_type,
-            "is_end": self.__is_end,
-            "id": self.id,
-            "links_out": {
-                "correct": len(self.links_out_ids_correct),
-                "errors": len(self.links_out_ids_error)
-            }
-        }
-        
-    def is_end(self):
-        return self.__is_end or \
-            (len(self.links_out_ids_correct)==0 and len(self.links_out_ids_error)==0)
-        
-    def has_link_out(self, node_id):
-        return node_id in self.links_out_ids_correct or node_id in self.links_out_ids_error 
-        
-    def add_node_id_to_link_out(self, node_id:str, is_correct_link:bool):
-        if is_correct_link:
-            if node_id in self.links_out_ids_correct:
-                print("@@@@ ERROR : add_node_id_to_link_out on adding", node_id, "into node", self.id, " in correct list")
-                return False
-            self.links_out_ids_correct.append(node_id)
-        else:
-            if node_id in self.links_out_ids_error:
-                print("@@@@ ERROR : add_node_id_to_link_out on adding", node_id, "into node", self.id, " in correct list")
-                return False
-            self.links_out_ids_error.append(node_id)
-        return True
-    
-    '''
-    TODO: aggiungere il parametro "metadata" che permetta di specificare il tipo di errore, se "is_correct_link" fosse falso, o che valore
-    e' stato controllato ed e' stato determinante nel definire questa specifica diramazione.
-    Quindi, riunire ambo i link sotto una unica collezione, che e' lista di una sovraclasse astratta, le cui due sottoclassi rappresentano
-    i link "normali/corretti" ed i link di errore. Es: { 'id_next': str, 'is_correct': bool, 'metadata': dict|object }
-    Modificare infine i for_each tali che effettuino dei filtri su quale link invocare la "azione".
-    '''
-    def add_node_to_link_out(self, node: object | dict, is_correct_link: bool):
-        if not isinstance(node, GraphVDNNode):
-            print(" [[[[[[[[[[[[[[[[[ node is NOT A GraphNode INSTANCE]]]]]]]]]]]]]]]]]")
-            return False
-        return self.add_node_id_to_link_out(node.id, is_correct_link)
-    
-    def for_each_link_out_correct(self, action: Callable[[str], None] ):
-        for l_o in self.links_out_ids_correct:
-            action(l_o)
-    def for_each_link_out_error(self, action: Callable[[str], None] ):
-        for l_o in self.links_out_ids_error:
-            action(l_o)
-    def for_each_link_out(self, action: Callable[[str], None] ):
-        self.for_each_link_out_correct(action)
-        self.for_each_link_out_error(action)
-
-class forwardLink:
-    never_cloned:bool
-    path_length:int
-    source_node:GraphVDNNode|None # works as "current node" as well
-    dest_node:GraphVDNNode|None
-    source_link: Self|None
-    dest_link: Self|None
-    def __init__(self, source_node:GraphVDNNode|None, dest_node:GraphVDNNode|None = None, prev_link:(Self|None)=None) -> None:
-        self.path_length = 1
-        self.never_cloned = True
-        self.source_node = source_node
-        self.dest_node = dest_node
-        self.dest_link = None
-        if prev_link is None:
-            self.source_link = None
-        else:
-            prev_link.dest_link = self
-            self.source_link = prev_link
-            self.path_length = prev_link.path_length + 1
-    def is_end(self):
-        return self.dest_node == None #self.dest_link == None
-    def is_start(self):
-        return self.source_node == None #self.source_link == None
-    def is_middle(self):
-        return not( self.is_end() or self.is_start() )
-    def is_source_end(self):
-        return False if self.source_node is None else self.source_node.is_end
-    def clone_after_first(self):
-        if self.never_cloned:
-            self.never_cloned = False
-            return self
-        c = forwardLink(self.source_node, self.dest_node)
-        c.source_link = self.source_link
-        c.path_length = self.path_length
-        return c
-
-class VDNPath(Jsonable):
-    id_start:str|None
-    id_end:str|None
-    steps_ids:list[str]
-    end_type:str|None
-    def __init__(self):
-        self.id_start = None
-        self.id_end = None
-        self.steps_ids = None
-        self.end_type = "unknown"
-    def to_json(self):
-        return {
-            "start_id": self.id_start,
-            "end_id": self.id_end,
-            "end_type": self.end_type,
-            "length_path": len(self.steps_ids),
-            "steps_ids": self.steps_ids
-        }
-
-class GraphVDN(Jsonable):
-    startID:str #UUID formatted
-    nodes_by_ID: dict[str, GraphVDNNode]
-    ends_IDs: list[str]
-    
-    def __init__(self, startID):
-        self.startID = startID
-        self.nodes_by_ID = {}
-        self.ends_IDs = []
-        
-    def to_json(self):
-        nodes = {}
-        for n_id, n in self.nodes_by_ID.items():
-            nodes[n_id] = n.to_json()
-        return {
-            "startID": self.startID,
-            "nodes_by_ID": nodes,
-            "ends": self.ends_IDs #[e_id for e_id, _ in nodes]
-        }
-
-    def add_node_block(self, original_data, id: str, is_end:bool = False, \
-        field_from_original_data_setter: Callable[[GraphVDNNode, object|dict],None] = None):
-        if id in self.nodes_by_ID:
-            print("-------- ID gia' presente:", id)
-            return
-        gNode = GraphVDNNode(id, is_end)
-        gNode.original_data = original_data
-        if field_from_original_data_setter is not None:
-            field_from_original_data_setter(gNode, original_data)
-        print("added new node: <id:", id, ", is_end:", is_end, "> -->", gNode.short_description())
-        self.nodes_by_ID[id] = gNode
-        if is_end:
-            #self.ends.append(gNode)
-            self.ends_IDs.append(id)
-            
-    def has_node(self, id_node):
-        return id_node in self.nodes_by_ID
-
-    '''
-    TODO: aggiungere il parametro "metadata" che permetta di specificare il tipo di errore, se "is_correct_link" fosse vero, o che valore
-    e' stato controllato ed e' stato determinante nel definire questa specifica diramazione
-    '''
-    def add_link_id(self, id_node_source, id_node_destination, is_correct_link: bool):
-        if id_node_source not in self.nodes_by_ID:
-            print("___ERROR Graph.add_link_id #1 add link id: ID source (", id_node_source, ") not found:", id_node_source)
-            return False
-        if id_node_destination not in self.nodes_by_ID:
-            print("___ERROR Graph.add_link_id #2 add link id: ID dest (", id_node_destination, ") not found:", False)
-            return False
-        return self.nodes_by_ID[id_node_source].add_node_id_to_link_out(id_node_destination, is_correct_link)
-
-        
-    def __dfs(self, action:Callable[[GraphVDNNode,GraphVDNNode], None], visited_nodes: dict[str, bool], current_node: GraphVDNNode, father_node: GraphVDNNode):
-        if current_node.id in visited_nodes:
-            return
-        visited_nodes[current_node.id] = True
-        action(current_node, father_node)
-        
-        def dfs_iteration(id_out: str):
-            if id_out in visited_nodes:
-                return
-            self.__dfs(action, visited_nodes, self.nodes_by_ID[id_out], current_node)
-        current_node.for_each_link_out(dfs_iteration)
-
-    # Depth-First Search
-    # scan the whole network, touching each nodes just once, performing an action on each node.
-    # The action accepts two parameters: the current node and its father from the root
-    # (the father of the root is None).
-    def depth_first_search(self, action:Callable[[GraphVDNNode,GraphVDNNode], None]):
-        starting_node = self.nodes_by_ID[self.startID]
-        visited_nodes: dict[str, bool] = {}
-        self.__dfs(action, visited_nodes, starting_node, None)
-        
-    # the path collector is a function accepting the list of already collected paths, the current "end node" and its relative incoming link
-    def __gae(self, paths_to_vdns: list[VDNPath], path_collector: Callable[[list[VDNPath], GraphVDNNode, forwardLink], VDNPath] , current_node: GraphVDNNode, incoming_link: forwardLink) -> None:
-        print("---exploring:", current_node.short_description(), " ----> from", ('SUPER-ROOT' if incoming_link.source_node is None else incoming_link.source_node.id), "node ")
-        if current_node.is_end():
-            print("----- end found!")
-            path_collector(paths_to_vdns, current_node, incoming_link)
-            return
-        
-        # avoid infinite recursion by detecting a cycle
-        already_explored_nodes: dict[str, bool] = {}
-        already_explored_nodes[current_node.id] = True
-        backward_iter_link = incoming_link.source_link
-        no_cycle = True
-        while (backward_iter_link is not None) \
-            and (backward_iter_link.source_node is not None) \
-            and no_cycle:
-                no_cycle = (backward_iter_link.source_node.id not in already_explored_nodes) # is the previous node alreadi seen
-                if no_cycle:
-                    already_explored_nodes[backward_iter_link.source_node.id] = True
-                    backward_iter_link = backward_iter_link.source_link
-        already_explored_nodes.clear()
-        already_explored_nodes = None
-        if not no_cycle:
-            print("##### CYCLE detected")
-            return
-        
-        #recursion
-        def gae_on_out_links(id_out_node):
-            out_node = self.nodes_by_ID[id_out_node]
-            next_link = forwardLink(current_node, out_node, incoming_link.clone_after_first())
-            self.__gae(paths_to_vdns, path_collector, out_node, next_link)
-            
-        print("      recursion on neighbours")
-        current_node.for_each_link_out(gae_on_out_links)
-        print("returned onto", current_node.id)
-    
-    def get_all_ends(self) -> list[VDNPath]:
-        #self.depth_first_search(lambda current_node, father_node: print(('ENTRY POINT' if father_node is None else father_node.id), "->", current_node.id))
-        
-        starting_node = self.nodes_by_ID[self.startID]
-        
-        #forward_links : dict[str, str] = {} # keep track of
-        super_root: forwardLink = forwardLink(None, dest_node=starting_node)
-        
-        paths_to_vdns: list[VDNPath] = []
-        
-        def path_collector(already_collected_paths: list[VDNPath], end_node:GraphVDNNode, incoming_link:forwardLink):
-            new_VDN_path:VDNPath = VDNPath()
-            new_VDN_path.id_end = end_node.id
-            new_VDN_path.end_type = end_node.block_type
-            new_VDN_path.steps_ids = [ "" ] * incoming_link.path_length
-            new_VDN_path.steps_ids[incoming_link.path_length-1] = end_node.id
-            
-            # collect all IDs, in a backward manner
-            i = incoming_link.path_length - 1
-            backward_link_iter = incoming_link
-            while i >= 0 and (backward_link_iter is not None): # and (backward_link_iter.dest_node is not None):
-                # the last node, the "end", is already collected (hence, the "-1" below): already jump backward
-                backward_link_iter = backward_link_iter.source_link
-                i -= 1
-                if (backward_link_iter is not None and backward_link_iter.dest_node is not None): # a jump is done, the current "link" might be the "super_node"
-                    new_VDN_path.steps_ids[i] = backward_link_iter.dest_node.id
-            new_VDN_path.id_start = new_VDN_path.steps_ids[0]
-            
-            already_collected_paths.append(new_VDN_path)
-            return new_VDN_path
-            
-        print("------------------------------------starting GAE")
-        self.__gae(paths_to_vdns, path_collector, starting_node, super_root)
-        return paths_to_vdns
-
-
 
 #
 # START
@@ -416,6 +128,48 @@ def readers_of_flows(pick_metadata:bool = False) -> map:
     return map(loader_flow, all_flows_name)
 
 
+def set_is_end_property(graph: GraphVDN, flow_details: dict):
+    blocks_raw_data = flow_details['Actions']
+    
+    #block_types_to_group = block_names.get_block_types_to_group()
+    
+    loop_disconnect_node_filter = lambda n_start, n_end: \
+        n_end is None or \
+        not (n_end.block_type == 'Loop' or n_end.block_type == 'DisconnectParticipant')
+
+    for id_node, node in graph.nodes_by_ID.items():
+        block_data = blocks_raw_data[id_node]
+        
+        if node.block_type == 'Loop' or node.block_type == 'DisconnectParticipant': # block_data['Type']
+            node.set_is_end(True)
+        elif 'Transitions' in block_data:
+            transitions = block_data['Transitions']
+            
+            if 'NextAction' in transitions:
+                node.set_is_end(False)
+            else:
+                has_conditions = 'Conditions' in block_data['Transitions'] 
+                has_errors = 'Errors' in block_data['Transitions']
+                
+                existing_nodes__conditions = [x for x in filter(lambda n: n['NextAction'] in graph.nodes_by_ID, transitions['Conditions']) ] if has_conditions else None
+                existing_nodes__errors = [x for x in filter(lambda n: n['NextAction'] in graph.nodes_by_ID, transitions['Errors']) ] if has_errors else None
+
+                if (existing_nodes__conditions is None or len(existing_nodes__conditions) == 0) and \
+                   (existing_nodes__errors is None or len(existing_nodes__errors) == 0) :
+                       node.set_is_end(True)
+                else:
+                    # if this node is able to reach itself through a non-Loop node, then it should considered as part of an end
+                      
+                    self_path_to_current_node = graph.shortest_path(\
+                        id_node, \
+                        id_node, \
+                        check_trivial_start_self_link=False, \
+                        node_filter= loop_disconnect_node_filter \
+                    )
+                    cycle_with_no_loop_blocks = self_path_to_current_node is not None and len(self_path_to_current_node) > 1
+                    node.set_is_end(cycle_with_no_loop_blocks)
+                    
+       
     
 def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
     blocks_original_data = flow_details['blocks']
@@ -426,8 +180,8 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
     
     # nodes creation
     
-    def is_end_node(id, node_data, errors_as_valid_outlinks:bool = True):
         '''
+    def is_end_node(id, node_data, errors_as_valid_outlinks:bool = True):
         this node is an end if:
         - it's a "Loop": no cycle is allowed
         - one of its "NextAction" points to itself or to a non-existing node
@@ -435,14 +189,13 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
             (i.e., if a default "NextAction" exists and does NOT point to itself, then it's NOT an end)
 
         #TODO: is a more complicated analysis required?
-        '''
         has_transition = 'Transitions' in node_data
         has_conditions = has_transition and 'Conditions' in node_data['Transitions'] 
         has_errors = has_transition and 'Errors' in node_data['Transitions']
         
         transitions = node_data['Transitions'] if has_transition else None
-        existing_nodes__conditions = filter(lambda n: n['NextAction'] in blocks_by_ids, transitions['Conditions']) if has_conditions else None
-        existing_nodes__errors = filter(lambda n: n['NextAction'] in blocks_by_ids, transitions['Errors']) if has_errors else None
+        existing_nodes__conditions = [x for x in filter(lambda n: n['NextAction'] in blocks_by_ids, transitions['Conditions']) ] if has_conditions else None
+        existing_nodes__errors = [x for x in filter(lambda n: n['NextAction'] in blocks_by_ids, transitions['Errors']) ] if has_errors else None
         
         # TODO : finire il controllo delle transizioni (Conditions ed Errors)
         return \
@@ -474,6 +227,7 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
                     #or( (len(transitions['Conditions']) if 'Conditions' in transitions else 0) == (len(transitions['Errors']) if 'Errors' in transitions else 0))
                 ) \
             )
+        '''
             
     def original_data_setter (node: GraphVDNNode, node_data: object|dict):
         node.block_type = node_data['Type']
@@ -491,7 +245,8 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
             if empty_branches:
                 print("ERROR: ", bod['Identifier'], " in \"Transition\" has no NextAction field and both Errors and Conditions arrays are empty")
         
-        graph.add_node_block(bod, bod['Identifier'], is_end_node(bod['Identifier'], bod), original_data_setter)
+        #graph.add_node_block(bod, bod['Identifier'], is_end_node(bod['Identifier'], bod), original_data_setter)
+        graph.add_node_block(bod, bod['Identifier'], False, original_data_setter)
     
     for id_start_node, node in graph.nodes_by_ID.items():
         out_nodes_data = node.original_data['Transitions']
@@ -535,7 +290,12 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
         
         node.original_data = {}
     '''
-           
+          
+          
+def merge_graphs(graphs_by_filename:dict[str, GraphVDN]) -> dict[str, GraphVDN]:
+    merged_graphs:dict[str, GraphVDN] = {}
+    
+    return merged_graphs 
 
 #
 #
@@ -546,17 +306,22 @@ def load_flow_blocks_into_graph(graph: GraphVDN, flow_details: dict):
 #
 #
 
-if __name__ == "__main__":
+
+def __main():
     __instance_id__flow = instance_id_from_ARN(INSTANCE_DETAILS['arn'])
     print("instance ID:", __instance_id__flow)
 
     readers = readers_of_flows(False) #TODO: allow there to pick metadata file
+    graphs_by_filename:dict[str, GraphVDN] = {}
     
     for flow in readers:
         print("\nreading", flow["name"], "flow")
         graph = GraphVDN(flow['startBlockID'])
+        graphs_by_filename[flow['name']] = graph
         
         load_flow_blocks_into_graph(graph, flow)
+        set_is_end_property(graph, flow)
+        #
         print("now, to json")
         outputJsonFile(graph.to_json(), flow["name"], flow['output_folder'])
         
@@ -566,4 +331,15 @@ if __name__ == "__main__":
         for p in paths:
             outputJsonFile(p.to_json(), f'path_{i}', f'paths/{flow["name"]}')
             i += 1
+    
+    print("\n\n now merge the graphs")
+    gg = merge_graphs(graphs_by_filename)
+    d = {}
+    for flow_name, graph in gg.items():
+        d[flow_name] = graph.to_json()
+    outputJsonFile(d, 'merged_graphs', "merged_graphs")
 
+    
+
+if __name__ == "__main__":
+    __main()

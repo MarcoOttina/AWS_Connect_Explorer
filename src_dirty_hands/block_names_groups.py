@@ -91,6 +91,13 @@ def flatten_block_names(bl):
     __flat_dict(bl, r)
     return r
 
+__block_types_to_group = None
+def get_block_types_to_group():
+    global __block_types_to_group
+    if __block_types_to_group is None:
+        __block_types_to_group = flatten_block_names(BLOCK_NAMES)
+    return __block_types_to_group
+
 
 def extract_group_from_complete_group(complete_group_name):
     dot_index = complete_group_name.rfind('.')
@@ -102,7 +109,7 @@ def extract_group_from_complete_group(complete_group_name):
 if __name__ == "__main__":
     import json
     print("->")
-    fbn = flatten_block_names(BLOCK_NAMES)
+    fbn = get_block_types_to_group()
     
     print(fbn)
     with open('./output/bn.json', 'w') as f:
