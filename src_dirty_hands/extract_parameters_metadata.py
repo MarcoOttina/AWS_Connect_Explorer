@@ -18,7 +18,7 @@ parameter_extracted_type_to_index:dict[str,int] = {
 }
 #global parameter_extracted_type_to_pythonic_type
 parameter_extracted_type_to_pythonic_type:dict[str, str] = {
-    'null': 'None', 'None': 'None', 'nil': 'None', 'NULL': 'None' \
+    'null': 'None', 'None': 'None', 'nil': 'None', 'NULL': 'None', \
     'string': 'str', 'str': 'str', 'char': 'str', \
     'list': 'list', 'array': 'list', \
     'dict': 'dict', 'dictionary': 'dict', 'map': 'dict', \
@@ -26,6 +26,8 @@ parameter_extracted_type_to_pythonic_type:dict[str, str] = {
     'double': 'double', 'float': 'double', 'number': 'double', \
     'bool': 'bool', 'boolean': 'bool'
 }
+
+FOLDER_PATH = "./resources/excluded/FCAB-BE"
 
 
 def extract_type_name(val):
@@ -49,10 +51,12 @@ def extract_filename(filename_and_extension):
 
 
 __extractors:dict[str, Callable[[dict,dict], dict]] | None = None
+# version 2 of the parameters extraction of the function "extract_params_from_file"
 def extract_connect_parameters(block_data, metadata) -> dict | None :
     global __extractors
     
     type_block = block_data['Type']
+    dynamic_params:dict[str,bool] = {}
     
     if __extractors is None:
         
@@ -95,11 +99,9 @@ def extract_connect_parameters(block_data, metadata) -> dict | None :
                 audio_value = meta['promptName']
                 arn_value_set = True
             
-            print("audio_value 0 -> ", audio_value)
-            if  (isinstance(audio_value, Mapping) or (type(audio_value) is dict)) \
-                and ('promptName' in audio_value):
-                audio_value = audio_value['promptName']
-                print("\taudio_value 1 -> ", audio_value)
+            if  (isinstance(audio_value, Mapping) or (type(audio_value) is dict)):
+                key = 'promptName' if 'promptName' in audio_value else 'displayName'
+                audio_value = audio_value[key]
                 
             if not arn_value_set:
                 print("\n\nERROR: nothing set in block with type ", bd['Type'], "; and ID: ", bd['Identifier'])
@@ -114,7 +116,7 @@ def extract_connect_parameters(block_data, metadata) -> dict | None :
             }
             
         def null_return(bd,meta):
-            return None
+            return None        
         
         __extractors = {
             'MessageParticipantIteratively' : audio_extractor,
@@ -200,11 +202,46 @@ def extract_connect_parameters(block_data, metadata) -> dict | None :
         return None
     
     p =__extractors[type_block](block_data, metadata)
+    
+    def dynamic_check(obj):
+        is_str = "str".__eq__(type(obj)) 
+        return ( ((type(is_str) == bool) and is_str) and obj.startswith('$.') )
     if p is not None:
-        s = p["value_type"]
-        s = parameter_extracted_type_to_pythonic_type[s]
-        p["value_type"] = s
-        p["value_type_index"] = parameter_extracted_type_to_index(s)
+        value_type = p["value_type"]
+        value_type = parameter_extracted_type_to_pythonic_type[value_type]
+        p["value_type"] = value_type
+        p["value_type_index"] = parameter_extracted_type_to_index[value_type]
+        
+        # enhancing the 'value' adding the 'is_dynamic' information
+        value = p['value']
+        value_rechanged = False
+        if ("str".__eq__(value_type) or "int".__eq__(value_type) or "bool".__eq__(value_type) or "str".__eq__(value_type)): 
+            p['value'] = {
+                'value': value,
+                'is_dynamic': dynamic_check(value)
+            }
+            value_rechanged = True
+        if (not value_rechanged):
+            if "dict".__eq__(value_type):
+                d = {}
+                metadata_dynamicParams = metadata['dynamicParams'] if 'dynamicParams' in metadata else []
+                for k,v in value.items():
+                    d[k] = {
+                        'value': v,
+                        'is_dynamic': (k in metadata_dynamicParams) or dynamic_check(v)
+                    }
+                p['value'] = d
+                value = d
+                value_rechanged = True
+            elif "list".__eq__(value_type):
+                value = [ {'value': v, 'is_dynamic': dynamic_check(v)} for v in value]
+                p['value'] = value
+                value_rechanged = True
+        if not value_rechanged:
+            p['value'] = {
+                'value': value,
+                'is_dynamic': dynamic_check(v)
+            }
     return p
 
 
@@ -415,7 +452,7 @@ def extract_params_from_file(filename, folder_files):
 #
 
 def extract_params_all_files():
-    folder_files = "./resources/FCAB-BE"
+    folder_files = FOLDER_PATH
     jsons = list_all_files(folder_files, allowed_extension='json', import_os_required=True)
 
     parameters_by_file:dict[str,list[dict]] = {} # for each filename, stock the list of each blick (which hold its relative parameters, somewhere)

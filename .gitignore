@@ -180,6 +180,14 @@ cython_debug/
 #resources
 #**/resources
 #**/resources/
+#**/resources/*
+#**/resources/**
+**/other/
+**/src_dirty_hands/*.json
+!**/src_dirty_hands/resources/units_tests/*.json
+**/src_dirty_hands/resources/excluded/**/*.json
+**/src_dirty_hands/resources/excluded/**/*.xlsx
+
 
 *.zip
 *.cz

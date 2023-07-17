@@ -10,7 +10,7 @@ def list_all_files(files_directory:str, allowed_extension:(str|None) = None, imp
     return files
 
 if __name__ == "__main__":
-    jsons = list_all_files("./resources/FCAB-BE", '.json', True)
+    jsons = list_all_files("./resources/excluded/FCAB-BE", '.json', True)
     for file in jsons:
         print(file)
     print("done")
