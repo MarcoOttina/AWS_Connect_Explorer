@@ -27,10 +27,11 @@ BLOCK_NAMES = {
             __t("TransferContactToQueue", "Transfer to queue")
         ],
         "to_wait_flows": [
-            __t("TransferContactToQueue", "Transfer to queue")
+            __t("TransferContactToQueue", "Transfer to wait flow")
         ],
         "resume_flows": [
-            __t("EndFlowExecution", "End flow / Resume") ],
+            __t("EndFlowExecution", "End flow / Resume")
+        ],
         "ends": [ 
             __t("DisconnectParticipant", "Disconnect"),
             __t("Loop", "Loop")

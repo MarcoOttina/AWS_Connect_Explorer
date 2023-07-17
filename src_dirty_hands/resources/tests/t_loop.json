@@ -51,7 +51,7 @@
         {
             "Identifier": "l1",
             "Type": "Loop",
-            "Parameters": {},
+            "Parameters": { "LoopCount": "3" },
             "Transitions": {
                 "NextAction": "c1",
                 "Errors": [],

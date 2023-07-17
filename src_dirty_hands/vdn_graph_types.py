@@ -71,15 +71,16 @@ class GraphVDNNode(Jsonable):
     def has_link_out(self, node_id):
         return node_id in self.links_out_ids_correct or node_id in self.links_out_ids_error 
         
+    def get_out_links_causing_loops(self):
+        return self.links_causing_loops
+        
     def add_node_id_to_link_out(self, node_id:str, is_correct_link:bool):
         if is_correct_link:
             if node_id in self.links_out_ids_correct:
-                print("@@@@ ERROR : add_node_id_to_link_out on adding", node_id, "into node", self.id, " in correct list")
                 return False
             self.links_out_ids_correct.append(node_id)
         else:
             if node_id in self.links_out_ids_error:
-                print("@@@@ ERROR : add_node_id_to_link_out on adding", node_id, "into node", self.id, " in correct list")
                 return False
             self.links_out_ids_error.append(node_id)
         return True
@@ -116,8 +117,9 @@ class GraphVDNNode(Jsonable):
             return
         del self.links_causing_loops[adjacent_node_id]
         
+        
 class forwardLink:
-    never_cloned:bool
+    # never_cloned:bool
     path_length:int
     source_node:GraphVDNNode|None # works as "current node" as well
     dest_node:GraphVDNNode|None
@@ -125,7 +127,7 @@ class forwardLink:
     dest_link: Self|None
     def __init__(self, source_node:GraphVDNNode|None, dest_node:GraphVDNNode|None = None, prev_link:(Self|None)=None) -> None:
         self.path_length = 1
-        self.never_cloned = True
+        # self.never_cloned = True
         self.source_node = source_node
         self.dest_node = dest_node
         self.dest_link = None
@@ -143,6 +145,7 @@ class forwardLink:
         return not( self.is_end() or self.is_start() )
     def is_source_end(self):
         return False if self.source_node is None else self.source_node.is_end
+    '''
     def clone_after_first(self):
         if self.never_cloned:
             self.never_cloned = False
@@ -151,6 +154,14 @@ class forwardLink:
         c.source_link = self.source_link
         c.path_length = self.path_length
         return c
+    '''
+    def clone(self):
+        c = forwardLink(self.source_node, self.dest_node)
+        c.source_link = self.source_link
+        c.path_length = self.path_length
+        return c
+    
+
 
 class NodeInfoPathfinding(Jsonable):
     key:str #id
@@ -191,15 +202,99 @@ class VDNPath(Jsonable):
             "steps_ids": self.steps_ids
         }
 
+class Resource(Jsonable):
+    key:str # could be an ARN, a filename, an Agent username/login, etc
+    blocks_id_using:list[str]|set[str]|dict[str, bool] # set of blocks that references this resource
+    resource_type:str # lambda, audio file, agent, queue, etc
+    def __init__(self, key:str, resource_type:str) -> None:
+        super().__init__()
+        self.key = key
+        self.resource_type = resource_type
+        self.blocks_id_using = {}
+    def add_block_using_me(self, block_id:str):
+        if block_id is None or block_id == "":
+            return
+        self.blocks_id_using[block_id] = True
+    def remove_block_using_me(self, block_id:str):
+        if block_id is None or block_id == "" or (block_id not in self.blocks_id_using):
+            return
+        del self.blocks_id_using[block_id]
+    def to_json(self):
+        return {
+            'key': self.key,
+            'blocks_id_using': self.blocks_id_using,
+            'resource_type': self.resource_type
+        }
+        
+
+class GraphStructuralMetadata(Jsonable):
+    #name of each flow this graph redirects to
+    graph: object # GraphVDN
+    flows_redirection:list[ dict['name':str,'arn':str] ]|None
+    blocks_id_redirecting: list[str]|set[str]|dict[str, bool]
+    end_blocks_ids:list[str]|set[str]|dict[str, str]
+    redirection_checker: (Callable[[GraphVDNNode,dict], bool]|None)
+    redirection_data_extractor: (Callable[ [GraphVDNNode,dict], dict['name':str,'arn':str]]|None)
+    '''
+    set of resources (Lambda's ARN, file audio, buckets, etc)
+    whose key is its identifier of any kind (ARN, filename,
+    Agent Username/login, etc).
+    '''
+    resources_by_key:dict[str, Resource]
+    
+    def __init__(self, \
+                redirection_data_extractor: (Callable[ [GraphVDNNode,dict], dict['name':str,'arn':str]]|None) = None, \
+                redirection_checker: (Callable[[GraphVDNNode,dict], bool]|None) = None \
+            ) -> None:
+        super().__init__()
+        self.flows_redirection = []
+        self.end_blocks_ids = {}
+        self.resources_by_key = {}
+        self.blocks_id_redirecting = {}
+        self.redirection_checker = redirection_checker
+        self.redirection_data_extractor = redirection_data_extractor
+    
+    def set_graph(self, graph: object):
+        if graph is None or (not isinstance(graph, GraphVDN)):
+            raise Exception("the given graph must be non-None and an instance of a GraphVDN class")
+        self.graph = graph
+            
+    def to_json(self):
+        eb = {}
+        end_block_ids_iterator = None
+        if isinstance(self.end_blocks_ids, dict):
+            end_block_ids_iterator = map( \
+                lambda id_flag_tupe: (id_flag_tupe[0], self.graph.node_by_id(id_flag_tupe[0])), \
+                self.end_blocks_ids.items())
+        elif isinstance(self.end_blocks_ids, list) or isinstance(self.end_blocks_ids, set):
+            end_block_ids_iterator = map( \
+                lambda id: (id, self.graph.node_by_id(id)), \
+                self.end_blocks_ids)
+        if end_block_ids_iterator is not None:
+            for id, b in end_block_ids_iterator:
+                eb[id] = b.to_json()
+        r_b_k = {}
+        for id, r in self.resources_by_key.items():
+            r_b_k[id] = r.to_json()
+        return {
+            'flows_redirection': self.flows_redirection,
+            'end_blocks_ids': eb,
+            'resources_by_key': r_b_k,
+        }
+
 class GraphVDN(Jsonable):
     startID:str #UUID formatted
+    name:str|None
     nodes_by_ID: dict[str, GraphVDNNode]
     ends_IDs: list[str]
+    graphStructuralMetadata: GraphStructuralMetadata
     
-    def __init__(self, startID):
+    def __init__(self, startID, name:str|None="", graphStructuralMetadata: GraphStructuralMetadata|None = None ):
         self.startID = startID
         self.nodes_by_ID = {}
         self.ends_IDs = []
+        self.name = name
+        self.graphStructuralMetadata = graphStructuralMetadata
         
     def to_json(self):
         nodes = {}
@@ -207,14 +302,16 @@ class GraphVDN(Jsonable):
             nodes[n_id] = n.to_json()
         return {
             "startID": self.startID,
+            "name": self.name,
             "nodes_by_ID": nodes,
             "ends": self.ends_IDs #[e_id for e_id, _ in nodes]
         }
 
     def add_node_block(self, original_data, id: str, is_end:bool = False, \
-        field_from_original_data_setter: Callable[[GraphVDNNode, object|dict],None] = None):
+        field_from_original_data_setter: Callable[[GraphVDNNode, dict|object|None],None] = None \
+            
+    ):
         if id in self.nodes_by_ID:
-            print("-------- ID gia' presente:", id)
             return
         gNode = GraphVDNNode(id, is_end)
         gNode.original_data = original_data
@@ -225,9 +322,16 @@ class GraphVDN(Jsonable):
         if is_end:
             #self.ends.append(gNode)
             self.ends_IDs.append(id)
+        if self.graphStructuralMetadata.redirection_checker is not None and self.graphStructuralMetadata.redirection_checker(gNode, original_data):
+            self.graphStructuralMetadata.blocks_id_redirecting.append(id)
             
     def has_node(self, id_node):
         return id_node in self.nodes_by_ID
+    
+    def node_by_id(self, id_node):
+        if not self.has_node(id_node):
+            return None
+        return self.nodes_by_ID[id_node]
 
     '''
     TODO: aggiungere il parametro "metadata" che permetta di specificare il tipo di errore, se "is_correct_link" fosse vero, o che valore
@@ -266,9 +370,7 @@ class GraphVDN(Jsonable):
         
     # the path collector is a function accepting the list of already collected paths, the current "end node" and its relative incoming link
     def __gae(self, paths_to_vdns: list[VDNPath], path_collector: Callable[[list[VDNPath], GraphVDNNode, forwardLink], VDNPath] , current_node: GraphVDNNode, incoming_link: forwardLink) -> None:
-        print("---exploring:", current_node.short_description(), " ----> from", ('SUPER-ROOT' if incoming_link.source_node is None else incoming_link.source_node.id), "node ")
         if current_node.is_end():
-            print("----- end found!")
             path_collector(paths_to_vdns, current_node, incoming_link)
             return
         
@@ -281,6 +383,7 @@ class GraphVDN(Jsonable):
             and (backward_iter_link.source_node is not None) \
             and no_cycle:
                 no_cycle = (backward_iter_link.source_node.id not in already_explored_nodes) # is the previous node alreadi seen
+                # this check could now be performed as "back_iter.source.id not in self.get_out_links_causing_loops()"
                 if no_cycle:
                     already_explored_nodes[backward_iter_link.source_node.id] = True
                     backward_iter_link = backward_iter_link.source_link
@@ -293,7 +396,8 @@ class GraphVDN(Jsonable):
         #recursion
         def gae_on_out_links(id_out_node):
             out_node = self.nodes_by_ID[id_out_node]
-            next_link = forwardLink(current_node, out_node, incoming_link.clone_after_first())
+            # next_link = forwardLink(current_node, out_node, incoming_link.clone_after_first())
+            next_link = forwardLink(current_node, out_node, incoming_link.clone())
             self.__gae(paths_to_vdns, path_collector, out_node, next_link)
             
         print(" recursion on neighbours")
@@ -332,7 +436,6 @@ class GraphVDN(Jsonable):
             already_collected_paths.append(new_VDN_path)
             return new_VDN_path
             
-        print("------------------------------------starting GAE")
         self.__gae(paths_to_vdns, path_collector, starting_node, super_root)
         return paths_to_vdns
     
@@ -346,18 +449,16 @@ class GraphVDN(Jsonable):
         as "end" automatically
         '''
         has_bte = (block_types_of_ends is not None) and len(block_types_of_ends) > 0
-        has_nec = node_end_check is not None
         
         for id_node, node in self.nodes_by_ID.items():
             is_end = False
-            print("NODE:", id_node)
             
             if has_bte and node.block_type in block_types_of_ends:
                 is_end = True
             elif (node.amount_links_out() == 0) or \
                 (all(map( lambda id_adj: id_adj == id_node, node.iterator_all_links()))):
                 is_end = True
-            elif has_nec and node_end_check(node):
+            elif (node_end_check is not None) and node_end_check(node):
                 is_end = True
             else:
                 links_list = [node.links_out_ids_correct, node.links_out_ids_error]
@@ -368,17 +469,12 @@ class GraphVDN(Jsonable):
                 #while i_list < len(links_list) and ( not(is_selfLoop_marking_end and self_loop_found) ):
                 for links in links_list:
                     for adjacent_id in links:
-                        if (adjacent_id == id_node) :
-                            print("id_node:", id_node, "-> adjacent_id:", adjacent_id)
                         if (adjacent_id == id_node) or self.has_path(adjacent_id, id_node):
                             links_counter_causing_selfLoop += 1
                             self_loop_found = True
                             node.mark_link_as_loop(adjacent_id)
                 if (is_selfLoop_marking_end and self_loop_found) or (links_counter_causing_selfLoop == amount_links_ount):
-                    print("#1 node \'", id_node, "\' has", links_counter_causing_selfLoop, "over", amount_links_ount, "links ... found loops?", self_loop_found)
                     is_end = True
-                else:
-                    print("#2 node \'", id_node, "\' has", links_counter_causing_selfLoop, "over", amount_links_ount, "links ... found loops?", self_loop_found)
             node.set_is_end(is_end)
     
     def add_edges(self, \
@@ -387,6 +483,9 @@ class GraphVDN(Jsonable):
         block_types_of_ends:(list[str]|set[str]|dict[str,Any]|None) = None, \
         node_end_check:(Callable[[GraphVDNNode],bool]|None)=None \
         ):
+        '''
+        edges: list of < source_id; destination_id; is_correct_link? > tuples
+        '''
         for e in edges:
             source = e[0]
             dest = e[1]

@@ -172,6 +172,11 @@ cython_debug/
 **/out
 **/output
 
+**/old
+**/old/
+**/other/*.json
+**/other/*.txt
+
 #resources
 #**/resources
 #**/resources/
